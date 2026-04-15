@@ -1,0 +1,5 @@
+allowBuilds:
+
+disallowWorkspaceCycles: true
+
+minimumReleaseAge: 4320
