@@ -8,7 +8,10 @@ type MainMenuEvent =
   | { type: "CONTINUE" }
   | { type: "BACK" }
   | { type: "CANCEL" }
-  | { type: "CONFIRM" };
+  | { type: "CONFIRM" }
+  | { type: "SELECT_ACTION" }
+  | { type: "RESOLVE_ACTION" }
+  | { type: "NEXT_TURN" };
 
 export const mainMenuMachine = setup({
   guards: {
@@ -87,10 +90,29 @@ export const mainMenuMachine = setup({
       },
     },
     game_ready: {
+      initial: "awaiting_action",
       states: {
-        awaiting_action: {},
-        resolving_turn: {},
-        turn_summary: {},
+        awaiting_action: {
+          on: {
+            SELECT_ACTION: {
+              target: "resolving_turn",
+            },
+          },
+        },
+        resolving_turn: {
+          on: {
+            RESOLVE_ACTION: {
+              target: "turn_summary",
+            },
+          },
+        },
+        turn_summary: {
+          on: {
+            NEXT_TURN: {
+              target: "awaiting_action",
+            },
+          },
+        },
       },
     },
   },

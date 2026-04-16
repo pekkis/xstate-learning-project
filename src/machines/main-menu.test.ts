@@ -89,6 +89,49 @@ describe("Main Menu Machine", () => {
 
     actor.send({ type: "CONFIRM" });
 
-    expect(actor.getSnapshot().matches("game_initialized")).toBe(true);
+    expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
+      true,
+    );
+  });
+
+  it("goes through a round", () => {
+    const actor = createActor(mainMenuMachine).start();
+
+    expect(actor.getSnapshot().matches("main_menu")).toBe(true);
+
+    actor.send({ type: "NEW_GAME" });
+
+    actor.send({ type: "UPDATE_NAME", payload: "Gaylord Louhiposki" });
+    expect(actor.getSnapshot().matches("player_creation")).toBe(true);
+
+    actor.send({ type: "CONTINUE" });
+
+    expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
+      true,
+    );
+
+    actor.send({ type: "CONFIRM" });
+
+    expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
+      true,
+    );
+
+    actor.send({ type: "SELECT_ACTION" });
+
+    expect(actor.getSnapshot().matches({ game_ready: "resolving_turn" })).toBe(
+      true,
+    );
+
+    actor.send({ type: "RESOLVE_ACTION" });
+
+    expect(actor.getSnapshot().matches({ game_ready: "turn_summary" })).toBe(
+      true,
+    );
+
+    actor.send({ type: "NEXT_TURN" });
+
+    expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
+      true,
+    );
   });
 });
