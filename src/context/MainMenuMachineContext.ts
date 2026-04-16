@@ -3,12 +3,12 @@ import { mainMenuMachine } from "../machines/main-menu";
 import { createBrowserInspector } from "@statelyai/inspect";
 
 const inspector = createBrowserInspector({
-  autoStart: true,
+  autoStart: true
 });
 
 export const MainMenuMachineContext = createActorContext(mainMenuMachine, {
   id: "mainMenu",
-  inspect: inspector.inspect,
+  inspect: inspector.inspect
 });
 
 export const MainMenuMachineProvider = MainMenuMachineContext.Provider;

@@ -17,9 +17,9 @@ export const routes: Route<MainMenuSnapshot>[] = [
   { when: { player_creation: "editing" }, render: () => <PlayerEditingPage /> },
   {
     when: { player_creation: "reviewing" },
-    render: () => <PlayerReviewingPage />,
+    render: () => <PlayerReviewingPage />
   },
   { when: { game_ready: "awaiting_action" }, render: () => <AwaitingAction /> },
   { when: { game_ready: "resolving_turn" }, render: () => <ResolvingTurn /> },
-  { when: { game_ready: "turn_summary" }, render: () => <TurnSummary /> },
+  { when: { game_ready: "turn_summary" }, render: () => <TurnSummary /> }
 ];

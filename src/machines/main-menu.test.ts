@@ -1,6 +1,6 @@
 import { expect, it, describe } from "vitest";
 import { mainMenuMachine } from "./main-menu";
-import { createActor } from "xstate";
+import { createActor, waitFor } from "xstate";
 
 describe("Main Menu Machine", () => {
   it("transitions from main menu to player creation and back", () => {
@@ -25,13 +25,13 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "NEW_GAME" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "UPDATE_NAME", payload: "Pier Paolo Pasolini" });
@@ -39,19 +39,19 @@ describe("Main Menu Machine", () => {
     expect(actor.getSnapshot().context.name).toBe("Pier Paolo Pasolini");
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "BACK" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONTINUE" });
@@ -84,17 +84,17 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONFIRM" });
 
     expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
-      true,
+      true
     );
   });
 
-  it("goes through a round", () => {
+  it("goes through a round", async () => {
     const actor = createActor(mainMenuMachine).start();
 
     expect(actor.getSnapshot().matches("main_menu")).toBe(true);
@@ -107,13 +107,13 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONFIRM" });
 
     expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
-      true,
+      true
     );
 
     expect(actor.getSnapshot().context.turn).toBe(1);
@@ -121,19 +121,17 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "SELECT_ACTION" });
 
     expect(actor.getSnapshot().matches({ game_ready: "resolving_turn" })).toBe(
-      true,
+      true
     );
 
-    actor.send({ type: "RESOLVE_ACTION" });
-
-    expect(actor.getSnapshot().matches({ game_ready: "turn_summary" })).toBe(
-      true,
-    );
+    await waitFor(actor, (state) => {
+      return state.matches({ game_ready: "turn_summary" });
+    });
 
     actor.send({ type: "NEXT_TURN" });
 
     expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
-      true,
+      true
     );
 
     expect(actor.getSnapshot().context.turn).toBe(2);

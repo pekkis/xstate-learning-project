@@ -1,4 +1,4 @@
-import { assign, setup } from "xstate";
+import { assign, fromPromise, setup } from "xstate";
 
 type MainMenuEvent =
   | { type: "NEW_GAME" }
@@ -10,7 +10,6 @@ type MainMenuEvent =
   | { type: "CANCEL" }
   | { type: "CONFIRM" }
   | { type: "SELECT_ACTION" }
-  | { type: "RESOLVE_ACTION" }
   | { type: "NEXT_TURN" };
 
 type MainMenuState = {
@@ -19,77 +18,88 @@ type MainMenuState = {
 };
 
 export const mainMenuMachine = setup({
+  actors: {
+    resolveTurn: fromPromise(async () => {
+      const ret = await new Promise<{ success: "ok" }>((resolve) => {
+        setTimeout(() => {
+          resolve({ success: "ok" });
+        }, 300);
+      });
+
+      return ret;
+    })
+  },
   guards: {
     hasName: ({ context }) => {
       return context.name.length > 0;
-    },
+    }
   },
   types: {
     context: {
-      name: "",
+      name: ""
     } as MainMenuState,
-    events: {} as MainMenuEvent,
-  },
+    events: {} as MainMenuEvent
+  }
 }).createMachine({
   context: {
     name: "",
-    turn: 0,
+    turn: 0
   },
   initial: "main_menu",
   states: {
     main_menu: {
       on: {
         LOAD_GAME: {
-          target: "load_game",
+          target: "load_game"
         },
         NEW_GAME: {
-          target: "player_creation.editing",
-        },
-      },
+          target: "player_creation.editing"
+        }
+      }
     },
     player_creation: {
       initial: "editing",
       on: {
         CANCEL: {
           actions: assign({
-            name: () => "",
+            name: () => ""
           }),
 
-          target: "main_menu",
+          target: "main_menu"
         },
         CONFIRM: {
-          target: "game_ready",
-        },
+          target: "game_ready"
+        }
       },
       states: {
         editing: {
           on: {
             UPDATE_NAME: {
               actions: assign({
-                name: ({ event }) => event.payload,
-              }),
+                name: ({ event }) => event.payload
+              })
             },
             CONTINUE: {
               target: "reviewing",
-              guard: "hasName",
-            },
-          },
+              guard: "hasName"
+            }
+          }
         },
         reviewing: {
           on: {
             BACK: {
-              target: "editing",
-            },
-          },
-        },
-      },
+              target: "editing"
+            }
+          }
+        }
+      }
     },
     load_game: {
       on: {
         BACK_TO_MENU: {
-          target: "main_menu",
-        },
-      },
+          target: "main_menu"
+        }
+      }
     },
     game_ready: {
       initial: "ready",
@@ -97,35 +107,37 @@ export const mainMenuMachine = setup({
       states: {
         ready: {
           entry: assign({
-            turn: ({ context }) => context.turn + 1,
+            turn: ({ context }) => context.turn + 1
           }),
           always: {
-            target: "awaiting_action",
-          },
+            target: "awaiting_action"
+          }
         },
 
         awaiting_action: {
           on: {
             SELECT_ACTION: {
-              target: "resolving_turn",
-            },
-          },
+              target: "resolving_turn"
+            }
+          }
         },
         resolving_turn: {
-          on: {
-            RESOLVE_ACTION: {
-              target: "turn_summary",
-            },
-          },
+          invoke: {
+            src: "resolveTurn",
+            onDone: "turn_summary",
+            onError: {
+              target: "awaiting_action"
+            }
+          }
         },
         turn_summary: {
           on: {
             NEXT_TURN: {
-              target: "ready",
-            },
-          },
-        },
-      },
-    },
-  },
+              target: "ready"
+            }
+          }
+        }
+      }
+    }
+  }
 });
