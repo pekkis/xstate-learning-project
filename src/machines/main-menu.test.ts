@@ -116,6 +116,8 @@ describe("Main Menu Machine", () => {
       true,
     );
 
+    expect(actor.getSnapshot().context.turn).toBe(1);
+
     actor.send({ type: "SELECT_ACTION" });
 
     expect(actor.getSnapshot().matches({ game_ready: "resolving_turn" })).toBe(
@@ -133,5 +135,7 @@ describe("Main Menu Machine", () => {
     expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
       true,
     );
+
+    expect(actor.getSnapshot().context.turn).toBe(2);
   });
 });

@@ -13,25 +13,27 @@ type MainMenuEvent =
   | { type: "RESOLVE_ACTION" }
   | { type: "NEXT_TURN" };
 
+type MainMenuState = {
+  name: string;
+  turn: number;
+};
+
 export const mainMenuMachine = setup({
   guards: {
     hasName: ({ context }) => {
-      if (!context.name) {
-        return false;
-      }
-
       return context.name.length > 0;
     },
   },
   types: {
-    context: {} as {
-      name: string | undefined;
-    },
+    context: {
+      name: "",
+    } as MainMenuState,
     events: {} as MainMenuEvent,
   },
 }).createMachine({
   context: {
-    name: undefined,
+    name: "",
+    turn: 0,
   },
   initial: "main_menu",
   states: {
@@ -50,7 +52,7 @@ export const mainMenuMachine = setup({
       on: {
         CANCEL: {
           actions: assign({
-            name: () => undefined,
+            name: () => "",
           }),
 
           target: "main_menu",
@@ -90,8 +92,18 @@ export const mainMenuMachine = setup({
       },
     },
     game_ready: {
-      initial: "awaiting_action",
+      initial: "ready",
+
       states: {
+        ready: {
+          entry: assign({
+            turn: ({ context }) => context.turn + 1,
+          }),
+          always: {
+            target: "awaiting_action",
+          },
+        },
+
         awaiting_action: {
           on: {
             SELECT_ACTION: {
@@ -109,7 +121,7 @@ export const mainMenuMachine = setup({
         turn_summary: {
           on: {
             NEXT_TURN: {
-              target: "awaiting_action",
+              target: "ready",
             },
           },
         },
