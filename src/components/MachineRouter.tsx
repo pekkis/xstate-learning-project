@@ -6,7 +6,7 @@ export type Route<TSnapshot extends { matches: (arg: any) => boolean }> = {
 };
 
 export type MachineRouterProps<
-  TSnapshot extends { matches: (arg: any) => boolean },
+  TSnapshot extends { matches: (arg: any) => boolean }
 > = {
   state: TSnapshot;
   routes: Route<TSnapshot>[];
@@ -14,11 +14,11 @@ export type MachineRouterProps<
 };
 
 export const MachineRouter = <
-  TSnapshot extends { matches: (arg: any) => boolean },
+  TSnapshot extends { matches: (arg: any) => boolean }
 >({
   state,
   routes,
-  fallback = null,
+  fallback = null
 }: MachineRouterProps<TSnapshot>) => {
   const route = routes.find((r) => state.matches(r.when));
   return route ? route.render(state) : fallback;

@@ -8,5 +8,5 @@ createRoot(document.getElementById("root")!).render(
     <MainMenuMachineProvider>
       <App />
     </MainMenuMachineProvider>
-  </StrictMode>,
+  </StrictMode>
 );

@@ -7,7 +7,8 @@ type MainMenuEvent =
   | { type: "UPDATE_NAME"; payload: string }
   | { type: "CONTINUE" }
   | { type: "BACK" }
-  | { type: "CANCEL" };
+  | { type: "CANCEL" }
+  | { type: "CONFIRM" };
 
 export const mainMenuMachine = setup({
   guards: {
@@ -17,70 +18,74 @@ export const mainMenuMachine = setup({
       }
 
       return context.name.length > 0;
-    },
+    }
   },
   types: {
     context: {} as {
       name: string | undefined;
     },
-    events: {} as MainMenuEvent,
-  },
+    events: {} as MainMenuEvent
+  }
 }).createMachine({
   context: {
-    name: undefined,
+    name: undefined
   },
   initial: "main_menu",
   states: {
     main_menu: {
       on: {
         LOAD_GAME: {
-          target: "load_game",
+          target: "load_game"
         },
         NEW_GAME: {
-          target: "player_creation.editing",
-        },
-      },
+          target: "player_creation.editing"
+        }
+      }
     },
     player_creation: {
       initial: "editing",
       on: {
         CANCEL: {
           actions: assign({
-            name: () => undefined,
+            name: () => undefined
           }),
 
-          target: "main_menu",
+          target: "main_menu"
         },
+        CONFIRM: {
+          target: "game_initialized"
+        }
       },
       states: {
         editing: {
           on: {
             UPDATE_NAME: {
               actions: assign({
-                name: ({ event }) => event.payload,
-              }),
+                name: ({ event }) => event.payload
+              })
             },
             CONTINUE: {
               target: "reviewing",
-              guard: "hasName",
-            },
-          },
+              guard: "hasName"
+            }
+          }
         },
         reviewing: {
           on: {
             BACK: {
-              target: "editing",
-            },
-          },
-        },
-      },
+              target: "editing"
+            }
+          }
+        }
+      }
     },
     load_game: {
       on: {
         BACK_TO_MENU: {
-          target: "main_menu",
-        },
-      },
+          target: "main_menu"
+        }
+      }
     },
-  },
+    game_initialized: {}
+  }
 });

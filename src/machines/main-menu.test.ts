@@ -25,13 +25,13 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "NEW_GAME" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "UPDATE_NAME", payload: "Pier Paolo Pasolini" });
@@ -39,19 +39,19 @@ describe("Main Menu Machine", () => {
     expect(actor.getSnapshot().context.name).toBe("Pier Paolo Pasolini");
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "BACK" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true,
+      true
     );
 
     actor.send({ type: "CONTINUE" });
