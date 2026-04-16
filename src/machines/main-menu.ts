@@ -15,14 +15,19 @@ type MainMenuEvent =
 type MainMenuState = {
   name: string;
   turn: number;
+
+  summary?: {
+    moraleDelta: number;
+    fatigueDelta: number;
+  };
 };
 
 export const mainMenuMachine = setup({
   actors: {
     resolveTurn: fromPromise(async () => {
-      const ret = await new Promise<{ success: "ok" }>((resolve) => {
+      const ret = await new Promise<MainMenuState["summary"]>((resolve) => {
         setTimeout(() => {
-          resolve({ success: "ok" });
+          resolve({ moraleDelta: -1, fatigueDelta: 1 });
         }, 300);
       });
 
@@ -124,7 +129,14 @@ export const mainMenuMachine = setup({
         resolving_turn: {
           invoke: {
             src: "resolveTurn",
-            onDone: "turn_summary",
+            onDone: {
+              actions: [
+                assign({
+                  summary: ({ event }) => event.output
+                })
+              ],
+              target: "turn_summary"
+            },
             onError: {
               target: "awaiting_action"
             }

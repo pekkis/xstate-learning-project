@@ -128,6 +128,11 @@ describe("Main Menu Machine", () => {
       return state.matches({ game_ready: "turn_summary" });
     });
 
+    expect(actor.getSnapshot().context.summary).toEqual({
+      fatigueDelta: 1,
+      moraleDelta: -1
+    });
+
     actor.send({ type: "NEXT_TURN" });
 
     expect(actor.getSnapshot().matches({ game_ready: "awaiting_action" })).toBe(
