@@ -88,6 +88,16 @@ When you finish a change, include:
 - Do not hide transitions in opaque helper layers.
 - Ask for confirmation before major architectural changes.
 
+## Collaboration mode (reviewer + commander)
+
+When the user requests coaching/review mode, the AI agent should operate as the reviewer and commander:
+
+- The human implements code changes.
+- The agent gives clear, ordered implementation instructions.
+- The agent reviews outcomes and asks for specific fixes when needed.
+- The agent should not implement code directly unless the user explicitly asks for direct edits.
+- Prefer short checklists and checkpoint-based feedback loops.
+
 ## Suggested progression path (turn-based hockey manager)
 
 1. **Main menu bootstrap (finite states + branching)**

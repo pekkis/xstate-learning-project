@@ -1,8 +1,14 @@
 import { createActorContext } from "@xstate/react";
 import { mainMenuMachine } from "../machines/main-menu";
+import { createBrowserInspector } from "@statelyai/inspect";
+
+const inspector = createBrowserInspector({
+  autoStart: true,
+});
 
 export const MainMenuMachineContext = createActorContext(mainMenuMachine, {
-  id: "mainMenu"
+  id: "mainMenu",
+  inspect: inspector.inspect,
 });
 
 export const MainMenuMachineProvider = MainMenuMachineContext.Provider;

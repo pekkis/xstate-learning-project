@@ -25,13 +25,13 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "NEW_GAME" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true
+      true,
     );
 
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true
+      true,
     );
 
     actor.send({ type: "UPDATE_NAME", payload: "Pier Paolo Pasolini" });
@@ -39,19 +39,19 @@ describe("Main Menu Machine", () => {
     expect(actor.getSnapshot().context.name).toBe("Pier Paolo Pasolini");
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true
+      true,
     );
 
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
-      true
+      true,
     );
 
     actor.send({ type: "BACK" });
 
     expect(actor.getSnapshot().matches({ player_creation: "editing" })).toBe(
-      true
+      true,
     );
 
     actor.send({ type: "CONTINUE" });
@@ -69,5 +69,26 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "BACK_TO_MENU" });
 
     expect(actor.getSnapshot().matches("main_menu")).toBe(true);
+  });
+
+  it("starts a new game", () => {
+    const actor = createActor(mainMenuMachine).start();
+
+    expect(actor.getSnapshot().matches("main_menu")).toBe(true);
+
+    actor.send({ type: "NEW_GAME" });
+
+    actor.send({ type: "UPDATE_NAME", payload: "Gaylord Louhiposki" });
+    expect(actor.getSnapshot().matches("player_creation")).toBe(true);
+
+    actor.send({ type: "CONTINUE" });
+
+    expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
+      true,
+    );
+
+    actor.send({ type: "CONFIRM" });
+
+    expect(actor.getSnapshot().matches("game_initialized")).toBe(true);
   });
 });
