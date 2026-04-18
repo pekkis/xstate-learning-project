@@ -5,9 +5,10 @@ import { MainMenuPage } from "../pages/MainMenuPage";
 import { LoadGamePage } from "../pages/LoadGamePage";
 import { PlayerEditingPage } from "../pages/PlayerEditingPage";
 import { PlayerReviewingPage } from "../pages/PlayerReviewingPage";
-import { AwaitingAction } from "../pages/AwaitingAction";
-import { ResolvingTurn } from "../pages/ResolvingTurn";
-import { TurnSummary } from "../pages/TurnSummary";
+import { AwaitingActionPage } from "../pages/AwaitingActionPage";
+import { ResolvingTurnPage } from "../pages/ResolvingTurnPage";
+import { TurnSummaryPage } from "../pages/TurnSummaryPage";
+import { ResolveFailedPage } from "../pages/ResolveFailedPage";
 
 type MainMenuSnapshot = SnapshotFrom<typeof mainMenuMachine>;
 
@@ -19,7 +20,18 @@ export const routes: Route<MainMenuSnapshot>[] = [
     when: { player_creation: "reviewing" },
     render: () => <PlayerReviewingPage />
   },
-  { when: { game_ready: "awaiting_action" }, render: () => <AwaitingAction /> },
-  { when: { game_ready: "resolving_turn" }, render: () => <ResolvingTurn /> },
-  { when: { game_ready: "turn_summary" }, render: () => <TurnSummary /> }
+  {
+    when: { game_ready: "awaiting_action" },
+    render: () => <AwaitingActionPage />
+  },
+  {
+    when: { game_ready: "resolving_turn" },
+    render: () => <ResolvingTurnPage />
+  },
+  {
+    when: { game_ready: "resolve_failed" },
+    render: () => <ResolveFailedPage />
+  },
+
+  { when: { game_ready: "turn_summary" }, render: () => <TurnSummaryPage /> }
 ];

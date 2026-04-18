@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMainMenuActorRef } from "../context/MainMenuMachineContext";
 
-export const AwaitingAction: FC = () => {
+export const AwaitingActionPage: FC = () => {
   const { send } = useMainMenuActorRef();
 
   return (

@@ -10,11 +10,14 @@ type MainMenuEvent =
   | { type: "CANCEL" }
   | { type: "CONFIRM" }
   | { type: "SELECT_ACTION" }
-  | { type: "NEXT_TURN" };
+  | { type: "NEXT_TURN" }
+  | { type: "RETRY" };
 
 type MainMenuState = {
   name: string;
   turn: number;
+
+  invalidParameter: boolean;
 
   summary?: {
     moraleDelta: number;
@@ -22,34 +25,46 @@ type MainMenuState = {
   };
 };
 
+type MainMenuInput = {
+  invalidParameter: boolean;
+};
+
 export const mainMenuMachine = setup({
   actors: {
-    resolveTurn: fromPromise(async () => {
-      const ret = await new Promise<MainMenuState["summary"]>((resolve) => {
-        setTimeout(() => {
-          resolve({ moraleDelta: -1, fatigueDelta: 1 });
-        }, 300);
-      });
+    resolveTurn: fromPromise(
+      async ({ input }: { input: { fail: boolean } }) => {
+        const { fail } = input;
 
-      return ret;
-    })
+        const ret = await new Promise<MainMenuState["summary"]>((resolve) => {
+          setTimeout(() => {
+            resolve({ moraleDelta: -1, fatigueDelta: 1 });
+          }, 300);
+        });
+
+        if (fail) {
+          throw new Error("Failed resolvation");
+        }
+
+        return ret;
+      }
+    )
   },
   guards: {
     hasName: ({ context }) => {
       return context.name.length > 0;
     }
   },
-  types: {
-    context: {
-      name: ""
-    } as MainMenuState,
-    events: {} as MainMenuEvent
+  types: {} as {
+    context: MainMenuState;
+    events: MainMenuEvent;
+    input: MainMenuInput;
   }
 }).createMachine({
-  context: {
+  context: ({ input }) => ({
     name: "",
-    turn: 0
-  },
+    turn: 0,
+    invalidParameter: input.invalidParameter
+  }),
   initial: "main_menu",
   states: {
     main_menu: {
@@ -129,6 +144,9 @@ export const mainMenuMachine = setup({
         resolving_turn: {
           invoke: {
             src: "resolveTurn",
+            input: ({ context }) => {
+              return { fail: context.invalidParameter };
+            },
             onDone: {
               actions: [
                 assign({
@@ -138,10 +156,22 @@ export const mainMenuMachine = setup({
               target: "turn_summary"
             },
             onError: {
-              target: "awaiting_action"
+              target: "resolve_failed",
+              actions: assign({
+                invalidParameter: false
+              })
             }
           }
         },
+
+        resolve_failed: {
+          on: {
+            RETRY: {
+              target: "resolving_turn"
+            }
+          }
+        },
+
         turn_summary: {
           on: {
             NEXT_TURN: {

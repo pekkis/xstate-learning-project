@@ -10,7 +10,8 @@
     "format": "oxfmt",
     "preview": "vite preview",
     "test": "vitest",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "verify": "pnpm run test --run && pnpm run lint && pnpm run format && pnpm run typecheck"
   },
   "dependencies": {
     "@statelyai/inspect": "^0.7.1",

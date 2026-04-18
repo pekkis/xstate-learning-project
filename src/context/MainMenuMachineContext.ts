@@ -8,7 +8,10 @@ const inspector = createBrowserInspector({
 
 export const MainMenuMachineContext = createActorContext(mainMenuMachine, {
   id: "mainMenu",
-  inspect: inspector.inspect
+  inspect: inspector.inspect,
+  input: {
+    invalidParameter: false
+  }
 });
 
 export const MainMenuMachineProvider = MainMenuMachineContext.Provider;

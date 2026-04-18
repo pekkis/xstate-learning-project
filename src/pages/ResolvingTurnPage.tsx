@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { FaSpinner } from "react-icons/fa";
 
-export const ResolvingTurn: FC = () => {
+export const ResolvingTurnPage: FC = () => {
   return (
     <div>
       <h1>RESOLVE ACTION</h1>
