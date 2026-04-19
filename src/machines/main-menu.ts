@@ -11,7 +11,8 @@ type MainMenuEvent =
   | { type: "CONFIRM" }
   | { type: "SELECT_ACTION" }
   | { type: "NEXT_TURN" }
-  | { type: "RETRY" };
+  | { type: "RETRY" }
+  | { type: "START_GAME" };
 
 type MainMenuState = {
   name: string;
@@ -19,6 +20,7 @@ type MainMenuState = {
 
   invalidParameter: boolean;
   resolveDelayMs: number;
+  gameRounds: number;
 
   summary?: {
     moraleDelta: number;
@@ -29,6 +31,7 @@ type MainMenuState = {
 type MainMenuInput = {
   invalidParameter?: boolean;
   resolveDelayMs?: number;
+  gameRounds?: number;
 };
 
 export const mainMenuMachine = setup({
@@ -67,13 +70,18 @@ export const mainMenuMachine = setup({
   }
 }).createMachine({
   context: ({ input }) => {
-    const { invalidParameter = false, resolveDelayMs = 300 } = input;
+    const {
+      invalidParameter = false,
+      resolveDelayMs = 300,
+      gameRounds = 3
+    } = input;
 
     return {
       name: "",
       turn: 0,
       invalidParameter: invalidParameter,
-      resolveDelayMs: resolveDelayMs
+      resolveDelayMs: resolveDelayMs,
+      gameRounds
     };
   },
   initial: "main_menu",
@@ -99,7 +107,7 @@ export const mainMenuMachine = setup({
           target: "main_menu"
         },
         CONFIRM: {
-          target: "game_ready"
+          target: "game_day"
         }
       },
       states: {
@@ -132,66 +140,99 @@ export const mainMenuMachine = setup({
         }
       }
     },
-    game_ready: {
-      initial: "ready",
+    game_day: {
+      initial: "pre_game",
+      onDone: "main_menu",
 
       states: {
-        ready: {
-          entry: assign({
-            turn: ({ context }) => context.turn + 1
-          }),
-          always: {
-            target: "awaiting_action"
-          }
-        },
-
-        awaiting_action: {
+        pre_game: {
           on: {
-            SELECT_ACTION: {
-              target: "resolving_turn"
+            START_GAME: {
+              target: "in_game"
             }
           }
         },
-        resolving_turn: {
-          invoke: {
-            src: "resolveTurn",
-            input: ({ context }) => {
-              return {
-                fail: context.invalidParameter,
-                resolveDelayMs: context.resolveDelayMs
-              };
+        in_game: {
+          initial: "ready",
+          onDone: "post_game",
+
+          states: {
+            ready: {
+              entry: assign({
+                turn: ({ context }) => context.turn + 1
+              }),
+
+              always: "awaiting_action"
             },
-            onDone: {
-              actions: [
-                assign({
-                  summary: ({ event }) => event.output
-                })
-              ],
-              target: "turn_summary"
+
+            awaiting_action: {
+              on: {
+                SELECT_ACTION: {
+                  target: "resolving_turn"
+                }
+              }
             },
-            onError: {
-              target: "resolve_failed",
-              actions: assign({
-                invalidParameter: false
-              })
+            resolving_turn: {
+              invoke: {
+                src: "resolveTurn",
+                input: ({ context }) => {
+                  return {
+                    fail: context.invalidParameter,
+                    resolveDelayMs: context.resolveDelayMs
+                  };
+                },
+                onDone: {
+                  actions: [
+                    assign({
+                      summary: ({ event }) => event.output
+                    })
+                  ],
+                  target: "turn_summary"
+                },
+                onError: {
+                  target: "resolve_failed",
+                  actions: assign({
+                    invalidParameter: false
+                  })
+                }
+              }
+            },
+
+            resolve_failed: {
+              on: {
+                RETRY: {
+                  target: "resolving_turn"
+                }
+              }
+            },
+
+            turn_summary: {
+              on: {
+                NEXT_TURN: [
+                  {
+                    guard: ({ context }) => context.turn >= context.gameRounds,
+                    target: "end_of_game"
+                  },
+                  {
+                    target: "ready"
+                  }
+                ]
+              }
+            },
+            end_of_game: {
+              type: "final"
             }
           }
         },
-
-        resolve_failed: {
+        post_game: {
           on: {
-            RETRY: {
-              target: "resolving_turn"
+            CONTINUE: {
+              target: "end_of_game"
             }
           }
         },
-
-        turn_summary: {
-          on: {
-            NEXT_TURN: {
-              target: "ready"
-            }
-          }
+        end_of_game: {
+          type: "final"
         }
       }
     }

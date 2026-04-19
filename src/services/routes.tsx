@@ -9,6 +9,8 @@ import { AwaitingActionPage } from "../pages/AwaitingActionPage";
 import { ResolvingTurnPage } from "../pages/ResolvingTurnPage";
 import { TurnSummaryPage } from "../pages/TurnSummaryPage";
 import { ResolveFailedPage } from "../pages/ResolveFailedPage";
+import { PreGamePage } from "../pages/PreGamePage";
+import { PostGamePage } from "../pages/PostGame";
 
 type MainMenuSnapshot = SnapshotFrom<typeof mainMenuMachine>;
 
@@ -21,17 +23,29 @@ export const routes: Route<MainMenuSnapshot>[] = [
     render: () => <PlayerReviewingPage />
   },
   {
-    when: { game_ready: "awaiting_action" },
+    when: { game_day: "pre_game" },
+    render: () => <PreGamePage />
+  },
+  {
+    when: { game_day: "post_game" },
+    render: () => <PostGamePage />
+  },
+
+  {
+    when: { game_day: { in_game: "awaiting_action" } },
     render: () => <AwaitingActionPage />
   },
   {
-    when: { game_ready: "resolving_turn" },
+    when: { game_day: { in_game: "resolving_turn" } },
     render: () => <ResolvingTurnPage />
   },
   {
-    when: { game_ready: "resolve_failed" },
+    when: { game_day: { in_game: "resolve_failed" } },
     render: () => <ResolveFailedPage />
   },
 
-  { when: { game_ready: "turn_summary" }, render: () => <TurnSummaryPage /> }
+  {
+    when: { game_day: { in_game: "turn_summary" } },
+    render: () => <TurnSummaryPage />
+  }
 ];
