@@ -18,6 +18,7 @@ type MainMenuState = {
   turn: number;
 
   invalidParameter: boolean;
+  resolveDelayMs: number;
 
   summary?: {
     moraleDelta: number;
@@ -26,23 +27,28 @@ type MainMenuState = {
 };
 
 type MainMenuInput = {
-  invalidParameter: boolean;
+  invalidParameter?: boolean;
+  resolveDelayMs?: number;
 };
 
 export const mainMenuMachine = setup({
   actors: {
     resolveTurn: fromPromise(
-      async ({ input }: { input: { fail: boolean } }) => {
-        const { fail } = input;
+      async ({
+        input
+      }: {
+        input: { fail: boolean; resolveDelayMs: number };
+      }) => {
+        const { fail = false, resolveDelayMs } = input;
 
         const ret = await new Promise<MainMenuState["summary"]>((resolve) => {
           setTimeout(() => {
             resolve({ moraleDelta: -1, fatigueDelta: 1 });
-          }, 300);
+          }, resolveDelayMs);
         });
 
         if (fail) {
-          throw new Error("Failed resolvation");
+          throw new Error("Failed resolution");
         }
 
         return ret;
@@ -60,11 +66,16 @@ export const mainMenuMachine = setup({
     input: MainMenuInput;
   }
 }).createMachine({
-  context: ({ input }) => ({
-    name: "",
-    turn: 0,
-    invalidParameter: input.invalidParameter
-  }),
+  context: ({ input }) => {
+    const { invalidParameter = false, resolveDelayMs = 300 } = input;
+
+    return {
+      name: "",
+      turn: 0,
+      invalidParameter: invalidParameter,
+      resolveDelayMs: resolveDelayMs
+    };
+  },
   initial: "main_menu",
   states: {
     main_menu: {
@@ -145,7 +156,10 @@ export const mainMenuMachine = setup({
           invoke: {
             src: "resolveTurn",
             input: ({ context }) => {
-              return { fail: context.invalidParameter };
+              return {
+                fail: context.invalidParameter,
+                resolveDelayMs: context.resolveDelayMs
+              };
             },
             onDone: {
               actions: [

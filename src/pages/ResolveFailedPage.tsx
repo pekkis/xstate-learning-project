@@ -6,7 +6,7 @@ export const ResolveFailedPage: FC = () => {
 
   return (
     <div>
-      <h1>TURN RESOLVATION FAILED!</h1>
+      <h1>TURN RESOLUTION FAILED!</h1>
 
       <h2>Summarize</h2>
 

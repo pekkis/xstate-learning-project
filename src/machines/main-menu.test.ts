@@ -104,7 +104,7 @@ describe("Main Menu Machine", () => {
 
   it("goes through a round", async () => {
     const actor = createActor(mainMenuMachine, {
-      input: { invalidParameter: false }
+      input: { invalidParameter: false, resolveDelayMs: 10 }
     }).start();
 
     expect(actor.getSnapshot().matches("main_menu")).toBe(true);
@@ -152,9 +152,9 @@ describe("Main Menu Machine", () => {
     expect(actor.getSnapshot().context.turn).toBe(2);
   });
 
-  it("goes to retry when turn resolvation fails", async () => {
+  it("goes to retry when turn resolution fails", async () => {
     const actor = createActor(mainMenuMachine, {
-      input: { invalidParameter: true }
+      input: { invalidParameter: true, resolveDelayMs: 10 }
     }).start();
 
     expect(actor.getSnapshot().matches("main_menu")).toBe(true);
@@ -185,14 +185,12 @@ describe("Main Menu Machine", () => {
     );
 
     await waitFor(actor, (state) => {
-      console.log(state);
       return state.matches({ game_ready: "resolve_failed" });
     });
 
     actor.send({ type: "RETRY" });
 
     await waitFor(actor, (state) => {
-      console.log(state);
       return state.matches({ game_ready: "turn_summary" });
     });
 
