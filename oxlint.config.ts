@@ -8,10 +8,10 @@ export default defineConfig({
     es6: true
   },
   rules: {
-    "no-empty-file": "off",
-    "require-yield": "off",
+    "no-empty-file": "error",
+    "require-yield": "error",
     "no-unused-vars": "error",
-    "no-constant-condition": "off",
+    "no-constant-condition": "error",
     curly: "error"
   }
 });

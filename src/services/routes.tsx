@@ -32,20 +32,20 @@ export const routes: Route<MainMenuSnapshot>[] = [
   },
 
   {
-    when: { game_day: { in_game: "awaiting_action" } },
+    when: { game_day: { in_game: { simulation: "awaiting_action" } } },
     render: () => <AwaitingActionPage />
   },
   {
-    when: { game_day: { in_game: "resolving_turn" } },
+    when: { game_day: { in_game: { simulation: "resolving_turn" } } },
     render: () => <ResolvingTurnPage />
   },
   {
-    when: { game_day: { in_game: "resolve_failed" } },
+    when: { game_day: { in_game: { simulation: "resolve_failed" } } },
     render: () => <ResolveFailedPage />
   },
 
   {
-    when: { game_day: { in_game: "turn_summary" } },
+    when: { game_day: { in_game: { simulation: "turn_summary" } } },
     render: () => <TurnSummaryPage />
   }
 ];

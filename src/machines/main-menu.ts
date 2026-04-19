@@ -1,4 +1,4 @@
-import { assign, fromPromise, setup } from "xstate";
+import { assign, fromPromise, raise, setup } from "xstate";
 
 type MainMenuEvent =
   | { type: "NEW_GAME" }
@@ -12,7 +12,9 @@ type MainMenuEvent =
   | { type: "SELECT_ACTION" }
   | { type: "NEXT_TURN" }
   | { type: "RETRY" }
-  | { type: "START_GAME" };
+  | { type: "START_GAME" }
+  | { type: "END_GAME" }
+  | { type: "MAKE_DECISION"; payload: string };
 
 type MainMenuState = {
   name: string;
@@ -21,6 +23,8 @@ type MainMenuState = {
   invalidParameter: boolean;
   resolveDelayMs: number;
   gameRounds: number;
+
+  lastDecision?: string;
 
   summary?: {
     moraleDelta: number;
@@ -153,76 +157,107 @@ export const mainMenuMachine = setup({
           }
         },
         in_game: {
-          initial: "ready",
-          onDone: "post_game",
+          type: "parallel",
 
           states: {
-            ready: {
-              entry: assign({
-                turn: ({ context }) => context.turn + 1
-              }),
-
-              always: "awaiting_action"
-            },
-
-            awaiting_action: {
+            management: {
               on: {
-                SELECT_ACTION: {
-                  target: "resolving_turn"
-                }
-              }
-            },
-            resolving_turn: {
-              invoke: {
-                src: "resolveTurn",
-                input: ({ context }) => {
-                  return {
-                    fail: context.invalidParameter,
-                    resolveDelayMs: context.resolveDelayMs
-                  };
+                END_GAME: {
+                  target: ".done"
                 },
-                onDone: {
-                  actions: [
-                    assign({
-                      summary: ({ event }) => event.output
-                    })
-                  ],
-                  target: "turn_summary"
-                },
-                onError: {
-                  target: "resolve_failed",
+                MAKE_DECISION: {
                   actions: assign({
-                    invalidParameter: false
-                  })
+                    lastDecision: ({ event }) => event.payload
+                  }),
+                  target: ".done"
+                }
+              },
+              initial: "idle",
+              states: {
+                idle: {},
+                coaching_decision: {
+                  on: {}
+                },
+                done: {
+                  type: "final"
                 }
               }
             },
+            simulation: {
+              initial: "ready",
+              states: {
+                ready: {
+                  entry: assign({
+                    turn: ({ context }) => context.turn + 1
+                  }),
 
-            resolve_failed: {
-              on: {
-                RETRY: {
-                  target: "resolving_turn"
-                }
-              }
-            },
+                  always: "awaiting_action"
+                },
 
-            turn_summary: {
-              on: {
-                NEXT_TURN: [
-                  {
-                    guard: ({ context }) => context.turn >= context.gameRounds,
-                    target: "end_of_game"
-                  },
-                  {
-                    target: "ready"
+                awaiting_action: {
+                  on: {
+                    SELECT_ACTION: {
+                      target: "resolving_turn"
+                    }
                   }
-                ]
+                },
+                resolving_turn: {
+                  invoke: {
+                    src: "resolveTurn",
+                    input: ({ context }) => {
+                      return {
+                        fail: context.invalidParameter,
+                        resolveDelayMs: context.resolveDelayMs
+                      };
+                    },
+                    onDone: {
+                      actions: [
+                        assign({
+                          summary: ({ event }) => event.output
+                        })
+                      ],
+                      target: "turn_summary"
+                    },
+                    onError: {
+                      target: "resolve_failed",
+                      actions: assign({
+                        invalidParameter: false
+                      })
+                    }
+                  }
+                },
+
+                resolve_failed: {
+                  on: {
+                    RETRY: {
+                      target: "resolving_turn"
+                    }
+                  }
+                },
+
+                turn_summary: {
+                  on: {
+                    NEXT_TURN: [
+                      {
+                        guard: ({ context }) =>
+                          context.turn >= context.gameRounds,
+                        target: "end_of_game"
+                      },
+                      {
+                        target: "ready"
+                      }
+                    ]
+                  }
+                },
+                end_of_game: {
+                  type: "final",
+                  entry: raise({ type: "END_GAME" })
+                }
               }
-            },
-            end_of_game: {
-              type: "final"
             }
-          }
+          },
+
+          onDone: "post_game"
         },
         post_game: {
           on: {

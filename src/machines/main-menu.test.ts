@@ -125,7 +125,9 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "START_GAME" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "awaiting_action" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "awaiting_action" } } })
     ).toBe(true);
 
     expect(actor.getSnapshot().context.turn).toBe(1);
@@ -133,11 +135,15 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "SELECT_ACTION" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "resolving_turn" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "resolving_turn" } } })
     ).toBe(true);
 
     await waitFor(actor, (state) => {
-      return state.matches({ game_day: { in_game: "turn_summary" } });
+      return state.matches({
+        game_day: { in_game: { simulation: "turn_summary" } }
+      });
     });
 
     expect(actor.getSnapshot().context.summary).toEqual({
@@ -148,7 +154,9 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "NEXT_TURN" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "awaiting_action" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "awaiting_action" } } })
     ).toBe(true);
 
     expect(actor.getSnapshot().context.turn).toBe(2);
@@ -179,7 +187,9 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "START_GAME" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "awaiting_action" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "awaiting_action" } } })
     ).toBe(true);
 
     expect(actor.getSnapshot().context.turn).toBe(1);
@@ -187,17 +197,23 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "SELECT_ACTION" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "resolving_turn" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "resolving_turn" } } })
     ).toBe(true);
 
     await waitFor(actor, (state) => {
-      return state.matches({ game_day: { in_game: "resolve_failed" } });
+      return state.matches({
+        game_day: { in_game: { simulation: "resolve_failed" } }
+      });
     });
 
     actor.send({ type: "RETRY" });
 
     await waitFor(actor, (state) => {
-      return state.matches({ game_day: { in_game: "turn_summary" } });
+      return state.matches({
+        game_day: { in_game: { simulation: "turn_summary" } }
+      });
     });
 
     expect(actor.getSnapshot().context.summary).toEqual({
@@ -208,7 +224,9 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "NEXT_TURN" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "awaiting_action" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "awaiting_action" } } })
     ).toBe(true);
 
     expect(actor.getSnapshot().context.turn).toBe(2);
@@ -239,7 +257,9 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "START_GAME" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "awaiting_action" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "awaiting_action" } } })
     ).toBe(true);
 
     expect(actor.getSnapshot().context.turn).toBe(1);
@@ -247,11 +267,15 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "SELECT_ACTION" });
 
     expect(
-      actor.getSnapshot().matches({ game_day: { in_game: "resolving_turn" } })
+      actor
+        .getSnapshot()
+        .matches({ game_day: { in_game: { simulation: "resolving_turn" } } })
     ).toBe(true);
 
     await waitFor(actor, (state) => {
-      return state.matches({ game_day: { in_game: "turn_summary" } });
+      return state.matches({
+        game_day: { in_game: { simulation: "turn_summary" } }
+      });
     });
 
     expect(actor.getSnapshot().context.summary).toEqual({
@@ -268,5 +292,52 @@ describe("Main Menu Machine", () => {
     actor.send({ type: "CONTINUE" });
 
     expect(actor.getSnapshot().matches("main_menu")).toBe(true);
+  });
+
+  it("makes a decision", async () => {
+    const actor = createActor(mainMenuMachine, {
+      input: { invalidParameter: false, resolveDelayMs: 10, gameRounds: 1 }
+    }).start();
+
+    expect(actor.getSnapshot().matches("main_menu")).toBe(true);
+
+    actor.send({ type: "NEW_GAME" });
+
+    actor.send({ type: "UPDATE_NAME", payload: "Gaylord Louhiposki" });
+    expect(actor.getSnapshot().matches("player_creation")).toBe(true);
+
+    actor.send({ type: "CONTINUE" });
+
+    expect(actor.getSnapshot().matches({ player_creation: "reviewing" })).toBe(
+      true
+    );
+
+    actor.send({ type: "CONFIRM" });
+
+    expect(actor.getSnapshot().matches({ game_day: "pre_game" })).toBe(true);
+
+    actor.send({ type: "START_GAME" });
+
+    expect(
+      actor.getSnapshot().matches({
+        game_day: {
+          in_game: { simulation: "awaiting_action", management: "idle" }
+        }
+      })
+    ).toBe(true);
+
+    actor.send({ type: "MAKE_DECISION", payload: "stupid decision" });
+
+    const snap = actor.getSnapshot();
+
+    expect(
+      snap.matches({
+        game_day: {
+          in_game: { simulation: "awaiting_action", management: "done" }
+        }
+      })
+    ).toBe(true);
+
+    expect(snap.context.turn).toBe(1);
   });
 });
